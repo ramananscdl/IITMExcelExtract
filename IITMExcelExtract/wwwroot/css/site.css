@@ -1,0 +1,33 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+table, th, td {
+    border: 1px solid;
+    border-color: darkblue;
+    padding:5px;
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size:12px;
+
+
+}
+th{
+    color: cadetblue;
+    font-size:14px;
+    font-weight: 800;
+}

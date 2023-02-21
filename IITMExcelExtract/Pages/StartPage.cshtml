@@ -1,0 +1,102 @@
+﻿@page
+@using System.Text;
+@using System.Data.OleDb;
+@using System.Data;
+@model IITMExcelExtract.Pages.StartPageModel
+@{
+    string connectionString = "Provider=Microsoft.ACE.OLEDB.12.0;  Data Source='E:\\Projects\\ABCData.xlsx';Extended Properties=\"Excel 12.0;HDR=YES;\"";
+    DataTable dt = new DataTable();
+    dt.Columns.Add("S.No");
+    dt.Columns.Add("F-Year");
+    dt.Columns.Add("Year");
+    dt.Columns.Add("Quater");
+    dt.Columns.Add("Month");
+    dt.Columns.Add("Commodity");
+    dt.Columns.Add("Amount");
+    dt.Columns.Add("Transaction");
+
+
+    using (FileStream fs = new FileStream("Output.csv", FileMode.OpenOrCreate, FileAccess.Write))
+    {
+        using (StreamWriter sw = new StreamWriter(fs))
+        {
+            using (OleDbConnection conn = new OleDbConnection(connectionString))
+            {
+                conn.Open();
+                int cnt = 0;
+
+                string[] tables = { "P2018-19", "S2018-19", "P2019-20", "S2019-20", "P2020-21", "S2020-21", "P2021-22", "S2021-22" };
+                foreach (var tbl in tables)
+                {
+
+                    OleDbCommand command = new OleDbCommand($"Select * from [{tbl}$]", conn);
+                    OleDbDataReader dr = command.ExecuteReader();
+                    DataTable schemaTable = dr.GetSchemaTable();
+                    sw.WriteLine("F.Year,Year,Quarter,Month,Product,Amount,Transaction Type");
+                    while (dr.Read())
+                    {
+
+                        for (int i = 1; i < dr.FieldCount; i++)
+                        {
+
+                            string year = i <10 ? tbl.Substring(3, 2) : tbl.Substring(6);
+                            string qtr = (((Math.Ceiling((decimal)i / 3) - 1) % 4) + 1).ToString();
+                            string transaction = tbl.Substring(0, 1) == "P" ? "Purchase" : "Sales";
+                            string amount = dr[i].ToString();
+                            string line = string.Empty;
+                            if (amount != string.Empty && amount != "")
+                            {
+                                cnt++;
+                                line = $"{tbl.Substring(1)}, 20{year},Q{qtr}, {schemaTable.Rows[i][0]},{dr[0].ToString()},{dr[i]},{transaction}";
+                                Console.WriteLine(line);
+                                sw.WriteLine(line);
+                                DataRow drw = dt.NewRow();
+                                drw[1] = tbl.Substring(1);
+                                drw[2] = $"20{year}";
+                                drw[3] = $"Q{qtr}";
+                                drw[4] = schemaTable.Rows[i][0].ToString();
+                                drw[5] = dr[0].ToString();
+                                drw[6] = dr[i].ToString();
+                                drw[7] = transaction;
+                                drw[0] = cnt;
+
+                                dt.Rows.Add(drw);
+                            }
+                        }
+                    }
+
+
+
+                }
+
+            }
+
+        }
+    }
+
+    <table>
+        <thead>
+        @foreach (var item in dt.Columns)
+            {
+              <th>
+              @item.ToString()
+              </th>  
+            }
+        </thead>
+        @foreach (DataRow row in dt.Rows)
+        {
+            <tr>
+                @for (int i = 0; i < dt.Columns.Count; i++)
+                {
+                    <td>
+                        @row[i]
+                    </td>
+
+                }
+
+            </tr>
+
+        }
+    </table>
+
+}
